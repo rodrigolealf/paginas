@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Atividades em Caruaru - 11/11/2026</title>
+<style>
+:root{--bg:#f6f4ef;--card:#fff;--ink:#1f2328;--mute:#6b7280;--line:#e5e1d8;--acc:#1f6f5c;--accbg:#e3f1ec}
+@media(prefers-color-scheme:dark){:root{--bg:#16181a;--card:#1f2225;--ink:#ecebe7;--mute:#9aa0a6;--line:#31353a;--acc:#5fc3a5;--accbg:#1d3029}}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.4 -apple-system,system-ui,"Segoe UI",Roboto,sans-serif;padding:16px 14px 80px}
+.wrap{max-width:640px;margin:0 auto}
+h1{font-size:20px;margin:4px 0 2px}
+.sub{color:var(--mute);font-size:14px;margin-bottom:12px}
+.bar{position:sticky;top:0;background:var(--bg);padding:8px 0 10px;z-index:5}
+.track{height:10px;background:var(--line);border-radius:99px;overflow:hidden}
+.fill{height:100%;width:0;background:var(--acc);transition:width .25s}
+.prog{display:flex;justify-content:space-between;font-size:13px;color:var(--mute);margin-top:6px}
+section{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px 14px;margin:12px 0}
+h2{font-size:16px;margin:0 0 6px;display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+h2 small{font-weight:500;color:var(--mute);font-size:12px;white-space:nowrap}
+.sec-sub{margin:14px 0 4px;padding-top:10px;border-top:1px dashed var(--line);font-size:14px;font-weight:600;display:flex;justify-content:space-between}
+.sec-sub small{font-weight:500;color:var(--mute)}
+label{display:flex;gap:12px;align-items:flex-start;padding:10px 4px;border-radius:10px;cursor:pointer}
+label+label{border-top:1px solid var(--line)}
+input[type=checkbox]{appearance:none;-webkit-appearance:none;flex:0 0 26px;width:26px;height:26px;margin:0;border:2px solid var(--mute);border-radius:7px;display:grid;place-items:center;background:transparent}
+input[type=checkbox]:checked{background:var(--acc);border-color:var(--acc)}
+input[type=checkbox]:checked::after{content:"";width:6px;height:12px;border:solid #fff;border-width:0 3px 3px 0;transform:rotate(45deg) translate(-1px,-1px)}
+label span{padding-top:2px}
+input:checked+span{color:var(--mute);text-decoration:line-through}
+.sec-done h2{color:var(--acc)}
+button{font:inherit;border:1px solid var(--line);background:var(--card);color:var(--ink);padding:10px 14px;border-radius:10px;margin-top:8px}
+.note{color:var(--mute);font-size:12px;margin-top:6px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Atividades em Caruaru</h1>
+  <div class="sub">Quarta-feira, 11/11/2026 · chegada prevista por volta das 10h</div>
+  <div class="bar">
+    <div class="track"><div class="fill" id="fill"></div></div>
+    <div class="prog"><span id="count">0 de 0</span><span id="pct">0%</span></div>
+  </div>
+  <div id="root"></div>
+  <button id="reset">Desmarcar tudo</button>
+  <div class="note" id="status">Conectando...</div>
+</div>
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
+import { getFirestore, doc, onSnapshot, setDoc } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
+import { firebaseConfig } from "./firebase-config.js";
+
+const DATA=[
+{t:"1. Viagem",items:["Ir para Caruaru (chegada ~10h)"]},
+{t:"2. Quarto",items:["Medir o painel da TV do quarto (largura e altura). Medido em 11/11: 100 cm de comprimento x 115 cm de altura","Anotar posição do ponto de ar-condicionado e das tomadas na parede do painel"]},
+{t:"3. Cozinha",items:["Medir o espaço do geladágua (largura, altura e profundidade). Medido em 11/11: 40 cm de altura x 42 cm de comprimento x 50 cm de profundidade","Verificar a tomada próxima ao geladágua"]},
+{t:"4. Sala — cortina (com a empresa responsável)",items:["Medir a janela da sala com a empresa da cortina (largura total, altura e peitoril)","Medir o pé-direito (piso ao teto)","Conferir com a empresa o encaixe das persianas no rasgo de luz (cortineiro)"]},
+{t:"5. Pedreiro — alinhar o serviço",items:["Encontrar com o pedreiro"],subs:[
+ {t:"5.1 Fiação da TV pelo teto",items:["Combinar a passagem da fiação da TV pelo teto","Definir a descida da fiação até a parede da TV (viga de 1,86 m)"]},
+ {t:"5.2 Tomadas de luminária na sala",items:["Definir os pontos das tomadas de luminária da sala","Confirmar o ponto do pendente sobre a mesa de jantar","Confirmar os 5 pontos dos spots junto à parede norte"]},
+ {t:"5.3 Gesso — sanca",items:["Sanca na parede do sofá (parede norte)","Sanca em L, seguindo pela parede da cortina (janela)","Confirmar com o gesseiro as larguras da sanca (estimadas em 36 cm de largura e 13 cm de rebaixo)","Confirmar se existe verga/viga no vão do corredor"]},
+ {t:"5.4 Instalação do lustre",items:["Pedreiro criar o ponto de instalação do lustre (pendente infinito dourado com LED, sobre a mesa de jantar)","Confirmar a posição do ponto no teto, centralizado na mesa oval","Confirmar ponto de energia para o LED do pendente"]},
+ {t:"5.5 Fita de LED no corredor",items:["Definir o trecho do corredor que receberá a fita de LED","Pedreiro instalar a fita de LED no corredor","Criar o ponto de tomada para alimentar a fita de LED (ajustar)","Definir onde fica o interruptor para acender o corredor"]},
+ {t:"5.6 Cozinha — transferência da porta",items:["Tampar a porta atual da cozinha (fechar a parede)","Abrir a nova porta ao lado, com abertura de cerca de 70 cm","Conferir a posição exata da nova abertura com o pedreiro antes de quebrar","Ajustar ou criar ponto de tomada na região da nova porta"]},
+ {t:"5.7 Cozinha — triturador de pia",items:["Medir o espaço sob a pia da cozinha (largura, altura e profundidade) para ver a viabilidade do triturador elétrico. Medido em 11/11: 45 cm de altura até a cuba","Verificar o ponto de tomada sob a pia (existe ou precisa criar)","Avaliar o sistema de instalação: ralo da cuba, sifão e saída de esgoto","Orientar o pedreiro sobre o que precisa ser feito"]},
+ {t:"5.8 Interruptores Intelbras — verificar com o pedreiro (eletricista)",items:["Verificar quantas teclas tem o interruptor da sala hoje. Verificado em 11/11: 1 interruptor de 4 teclas e 2 interruptores de 2 teclas, sendo 1 de cada vai e vem","Verificar se as caixas de interruptor têm fio neutro (todos os Intelbras exigem)","Decidir entre Wi-Fi (EWS/EIW, sem hub, de 1 a 4 teclas) e Zigbee (EZS, com hub MCA 1002, de 1 e 2 teclas)","Se for Zigbee, confirmar com a Intelbras a compatibilidade com o hub MCA 1002"]},
+ {t:"5.9 Tomadas atrás do sofá e do buffet",items:["Conferir onde estão as tomadas da parede norte, que o sofá e o buffet vão cobrir","Pedreiro mover as tomadas de trás do sofá para os cantos","Pedreiro mover as tomadas de trás do buffet para os cantos","Combinar com o pedreiro o afastamento para cada lado (sofá de 2,65 m e buffet de 2,20 m)"]},
+ {t:"5.10 Pintura em cimento queimado",items:["Pedreiro pintar em cimento queimado a parede da TV (viga de 1,86 m)","Pedreiro pintar em cimento queimado a parede do bar (1,57 m)","Combinar a cor, mais escura, e o material com o pedreiro"]}
+]},
+{t:"6. Porta de entrada — fechadura eletrônica (eu mesmo)",items:["Avaliar a estrutura da porta de entrada","Medir a espessura da porta (as Intelbras servem para portas de 30 a 60 mm)","Ver o tipo de porta e a fechadura atual (sobrepor ou embutir)","Tirar fotos da porta (frente, verso, lateral e fechadura atual) e mandar no chat do comparativo","Definir qual das 3 opções da Intelbras se encaixa melhor, conforme as fotos"]},
+{t:"7. Banheiro da suíte — móvel",items:["Avaliar o possível móvel do banheiro da suíte","Decidir se vai fazer o móvel ou não"]},
+{t:"8. Marceneiro — pagamento",items:["Anotar o endereço da loja do marceneiro (ele vai passar o local)","Ir à loja do marceneiro","Fazer o pagamento da primeira parte dos móveis"]},
+{t:"9. Guarda-roupas — reavaliar",items:["Reavaliar o guarda-roupa do quarto da Letícia, olhando as portas. Medido em 11/11: 158,5 cm de comprimento x 55 cm de profundidade","Reavaliar o guarda-roupa do meu quarto, olhando as portas"]},
+{t:"10. Administradora do condomínio (fora da obra)",items:["Cadastrar o Face ID para entrar no prédio","Ver onde ficam as garagens do prédio"]}
+];
+
+const KEY="caruaru-2026-11-11";
+const statusEl=document.getElementById("status");
+let state={};
+try{state=JSON.parse(localStorage.getItem(KEY)||"{}")}catch(e){state={}}
+let ref=null,saveT=null;
+
+function ticks(){const o={};Object.keys(state).forEach(k=>{if(state[k]&&k.charAt(0)==="k")o[k]=true});return o}
+function setStatus(t){statusEl.textContent=t}
+function local(){try{localStorage.setItem(KEY,JSON.stringify(state))}catch(e){}}
+function dbSave(){
+  if(!ref)return;
+  clearTimeout(saveT);
+  setStatus("Salvando...");
+  saveT=setTimeout(async()=>{
+    saveT=null;
+    try{await setDoc(ref,{ticks:ticks(),t:Date.now()});setStatus("Salvo na nuvem. Qualquer pessoa com o link vê e marca.")}
+    catch(e){setStatus("Não consegui salvar na nuvem. Fica salvo só neste aparelho.")}
+  },400);
+}
+function save(){local();dbSave()}
+
+const root=document.getElementById("root");
+function mk(items,sec){
+  const frag=document.createDocumentFragment();
+  items.forEach((txt,ix)=>{
+    const id="k"+sec+"_"+ix;
+    const l=document.createElement("label");
+    const c=document.createElement("input");c.type="checkbox";c.id=id;c.checked=!!state[id];c.dataset.sec=sec;
+    const s=document.createElement("span");s.textContent=txt;
+    c.addEventListener("change",()=>{state[id]=c.checked;save();update()});
+    l.append(c,s);frag.append(l);
+  });
+  return frag;
+}
+DATA.forEach((d,di)=>{
+  const sec=document.createElement("section");sec.dataset.sec=di;
+  sec.innerHTML='<h2><span></span><small></small></h2>';
+  sec.querySelector("span").textContent=d.t;
+  sec.append(mk(d.items,di));
+  (d.subs||[]).forEach((s,si)=>{
+    const h=document.createElement("div");h.className="sec-sub";
+    h.innerHTML="<span></span><small></small>";h.firstChild.textContent=s.t;h.dataset.sub=di+"-"+si;
+    sec.append(h);sec.append(mk(s.items,di+"-"+si));
+  });
+  root.append(sec);
+});
+function update(){
+  const all=[...document.querySelectorAll("input[type=checkbox]")];
+  const done=all.filter(c=>c.checked).length;
+  document.getElementById("count").textContent=done+" de "+all.length;
+  const p=all.length?Math.round(done/all.length*100):0;
+  document.getElementById("pct").textContent=p+"%";
+  document.getElementById("fill").style.width=p+"%";
+  document.querySelectorAll("section").forEach(sec=>{
+    const di=sec.dataset.sec;
+    const cs=all.filter(c=>c.dataset.sec===di||c.dataset.sec.startsWith(di+"-"));
+    const d=cs.filter(c=>c.checked).length;
+    sec.querySelector("h2 small").textContent=d+"/"+cs.length;
+    sec.classList.toggle("sec-done",d===cs.length);
+    sec.querySelectorAll(".sec-sub").forEach(h=>{
+      const sc=all.filter(c=>c.dataset.sec===h.dataset.sub);
+      h.querySelector("small").textContent=sc.filter(c=>c.checked).length+"/"+sc.length;
+    });
+  });
+}
+function applyState(){
+  document.querySelectorAll("input[type=checkbox]").forEach(c=>{c.checked=!!state[c.id]});
+  update();
+}
+const resetBtn=document.getElementById("reset");
+resetBtn.addEventListener("click",()=>{
+  if(!resetBtn.dataset.arm){
+    resetBtn.dataset.arm=1;resetBtn.textContent="Toque de novo para confirmar";
+    setTimeout(()=>{delete resetBtn.dataset.arm;resetBtn.textContent="Desmarcar tudo"},3000);return;
+  }
+  state={};save();applyState();
+  delete resetBtn.dataset.arm;resetBtn.textContent="Desmarcar tudo";
+});
+update();
+
+try{
+  const app=initializeApp(firebaseConfig);
+  const db=getFirestore(app);
+  const r=doc(db,"checklists","caruaru-2026-11-11");
+  let first=true;
+  onSnapshot(r,snap=>{
+    const remote=(snap.exists()&&snap.data().ticks)||{};
+    if(first){
+      first=false;
+      ref=r;
+      let extra=false;
+      Object.keys(remote).forEach(k=>{if(remote[k])state[k]=true});
+      Object.keys(ticks()).forEach(k=>{if(!remote[k])extra=true});
+      local();applyState();
+      if(extra||!snap.exists())dbSave();else setStatus("Salvo na nuvem. Qualquer pessoa com o link vê e marca.");
+    }else if(!saveT){
+      Object.keys(state).forEach(k=>{if(k.charAt(0)==="k")delete state[k]});
+      Object.keys(remote).forEach(k=>{if(remote[k])state[k]=true});
+      local();applyState();
+    }
+  },()=>setStatus("Sem conexão com a nuvem. Fica salvo só neste aparelho."));
+}catch(e){
+  setStatus("Nuvem não configurada. Fica salvo só neste aparelho.");
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,10 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /checklists/{pageId} {
+      allow read: if true;
+      allow write: if request.resource.data.keys().hasOnly(['ticks','t'])
+                   && request.resource.data.ticks is map;
+    }
+  }
+}
