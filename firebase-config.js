@@ -1,0 +1,1 @@
+export const firebaseConfig = {apiKey:"AIzaSyAy75CRRpXdb4SJqalZazvCJ_SocKBQA7M",authDomain:"checklist-caruaru.firebaseapp.com",projectId:"checklist-caruaru",storageBucket:"checklist-caruaru.firebasestorage.app",messagingSenderId:"851292368926",appId:"1:851292368926:web:34390842e6aea2663f7e0f"};
