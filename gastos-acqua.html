@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Gastos Acqua Home Caruaru</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/* Layout: folha de controle em coluna única. Resumo no topo, quadro por categoria, depois um quadro de lançamentos para cada categoria. */
+:root{
+  --bg:#eceff1; --surface:#ffffff; --ink:#17222d; --muted:#5d6b78; --line:#d5dbe0;
+  --accent:#1d4f7c; --accent-ink:#ffffff; --tint:#e3ebf3;
+  --good:#2b7a4b; --warn:#a96a0c; --crit:#b3382a;
+  --f-display:"Barlow Condensed","Arial Narrow",sans-serif;
+  --f-body:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --f-num:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#11171d; --surface:#18212a; --ink:#e6ecf1; --muted:#93a2af; --line:#2c3945;
+    --accent:#6aa6dc; --accent-ink:#0c1722; --tint:#1d2b39;
+    --good:#5cc088; --warn:#e0a94a; --crit:#ee7b6a; color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#11171d; --surface:#18212a; --ink:#e6ecf1; --muted:#93a2af; --line:#2c3945;
+  --accent:#6aa6dc; --accent-ink:#0c1722; --tint:#1d2b39;
+  --good:#5cc088; --warn:#e0a94a; --crit:#ee7b6a; color-scheme:dark;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font:400 15px/1.45 var(--f-body)}
+main{max-width:1100px;margin:0 auto;padding:24px 16px 56px;display:flex;flex-direction:column;gap:28px}
+h1,h2,h3{font-family:var(--f-display);font-weight:600;text-wrap:balance;margin:0;letter-spacing:.01em}
+h1{font-size:40px;line-height:1.05;font-weight:700}
+h2{font-size:26px}
+.num{font-family:var(--f-num);font-variant-numeric:tabular-nums;white-space:nowrap}
+.muted{color:var(--muted)}
+button,input,select,textarea{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+.head{display:flex;flex-wrap:wrap;gap:8px 24px;justify-content:space-between;align-items:flex-end;border-bottom:2px solid var(--ink);padding-bottom:14px}
+.head p{margin:6px 0 0;max-width:62ch}
+.save-state{font-size:13px;color:var(--muted);display:flex;align-items:center;gap:6px}
+.save-state i{width:8px;height:8px;border-radius:50%;background:var(--good);display:inline-block}
+.save-state.off i{background:var(--warn)}
+
+.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px}
+.tile{background:var(--surface);border:1px solid var(--line);border-left:4px solid var(--accent);padding:14px 16px;display:flex;flex-direction:column;gap:2px}
+.tile.good{border-left-color:var(--good)} .tile.warn{border-left-color:var(--warn)} .tile.crit{border-left-color:var(--crit)}
+.tile .label{font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);font-weight:500}
+.tile .value{font-family:var(--f-num);font-size:24px;font-weight:500;font-variant-numeric:tabular-nums}
+.tile .sub{font-size:12px;color:var(--muted)}
+
+.panel{background:var(--surface);border:1px solid var(--line)}
+.scroll{overflow-x:auto}
+table{width:100%;border-collapse:collapse}
+th,td{padding:9px 12px;text-align:left;vertical-align:top;border-bottom:1px solid var(--line)}
+th{font-size:12px;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);font-weight:500;background:var(--tint);white-space:nowrap}
+td.r,th.r{text-align:right}
+tfoot td{font-weight:600;background:var(--tint);border-bottom:0}
+tr:last-child td{border-bottom:0}
+
+.catlink{background:none;border:0;padding:0;cursor:pointer;color:var(--accent);font-weight:600;text-align:left;text-decoration:underline;text-underline-offset:3px}
+.budget{width:116px;text-align:right;background:var(--bg);border:1px solid var(--line);padding:5px 8px;font-family:var(--f-num)}
+.bar{height:8px;background:var(--tint);min-width:90px;position:relative}
+.bar b{display:block;height:100%;background:var(--accent)}
+.bar.over b{background:var(--crit)}
+.pct{font-size:12px;color:var(--muted)}
+.neg{color:var(--crit)}
+
+.tools{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.tools input,.tools select{background:var(--surface);border:1px solid var(--line);padding:7px 10px;min-height:36px}
+.tools input{flex:1 1 220px}
+
+.sec{display:flex;flex-direction:column;gap:10px}
+.sec-head{display:flex;flex-wrap:wrap;gap:8px 16px;justify-content:space-between;align-items:center}
+.sec-head .meta{display:flex;flex-wrap:wrap;gap:4px 18px;font-size:13px;color:var(--muted)}
+.sec-head .meta b{color:var(--ink);font-weight:500}
+.btn{border:1px solid var(--line);background:var(--surface);padding:7px 14px;cursor:pointer;min-height:36px}
+.btn:hover{border-color:var(--accent)}
+.btn.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent);font-weight:500}
+.btn.sm{padding:3px 9px;min-height:28px;font-size:13px}
+.btn.danger{color:var(--crit)}
+.empty{padding:18px 12px;color:var(--muted)}
+
+.pill{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:500;padding:2px 9px;border:1px solid currentColor;white-space:nowrap}
+.pill::before{content:"";width:7px;height:7px;background:currentColor;border-radius:50%}
+.pill.pago{color:var(--good)}
+.pill.apagar{color:var(--warn)}
+.pill.cotado{color:var(--muted)}
+.pill.cotado::before{background:none;border:1.5px solid currentColor}
+.note{display:block;font-size:12px;color:var(--muted)}
+.file{font-family:var(--f-num);font-size:12px;color:var(--muted);word-break:break-all}
+.acts{display:flex;gap:6px;justify-content:flex-end}
+
+dialog{border:1px solid var(--ink);background:var(--surface);color:var(--ink);padding:0;width:min(560px,calc(100vw - 32px));max-height:calc(100vh - 32px);overflow:auto}
+dialog::backdrop{background:rgba(10,16,22,.55)}
+.dlg-in{padding:20px;display:flex;flex-direction:column;gap:14px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.grid .full{grid-column:1/-1}
+label{display:flex;flex-direction:column;gap:4px;font-size:13px;color:var(--muted)}
+label input,label select,label textarea{background:var(--bg);border:1px solid var(--line);padding:8px 10px;color:var(--ink);font-size:15px;min-height:38px}
+textarea{resize:vertical;min-height:60px}
+.dlg-foot{display:flex;gap:10px;justify-content:flex-end}
+.scope{padding:12px 16px;display:flex;flex-direction:column;gap:8px}
+.scope-h{display:flex;flex-wrap:wrap;justify-content:space-between;gap:4px 12px}
+.scope ul{list-style:none;margin:0;padding:0;display:flex;flex-direction:column}
+.scope li{display:flex;gap:10px;align-items:flex-start;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--line)}
+.scope li:last-child{border-bottom:0}
+.chk{flex-direction:row;align-items:flex-start;gap:10px;color:var(--ink);font-size:15px}
+.chk input{min-height:0;width:18px;height:18px;margin:2px 0 0;padding:0;flex:none}
+.chk .done{text-decoration:line-through;color:var(--muted)}
+.scope-add{display:flex;gap:8px;flex-wrap:wrap}
+.scope-add input{flex:1 1 240px;background:var(--bg);border:1px solid var(--line);padding:6px 10px;min-height:32px}
+#toast{position:fixed;left:50%;bottom:20px;transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:9px 16px;font-size:14px;opacity:0;pointer-events:none;transition:opacity .2s;max-width:calc(100vw - 32px)}
+#toast.on{opacity:1}
+.foot{font-size:13px;color:var(--muted);border-top:1px solid var(--line);padding-top:14px}
+.foot code{font-family:var(--f-num);font-size:12px;background:var(--tint);padding:2px 6px;word-break:break-word}
+@media (max-width:560px){
+  h1{font-size:32px}
+  .grid{grid-template-columns:1fr}
+}
+@media (prefers-reduced-motion:reduce){#toast{transition:none}}
+</style>
+</head>
+<body>
+<main id="app"></main>
+
+<dialog id="dlg" aria-labelledby="dlg-title">
+  <form id="form" method="dialog" class="dlg-in">
+    <h2 id="dlg-title">Lançar gasto</h2>
+    <div class="grid">
+      <label class="full">Categoria
+        <select id="f-cat" required></select>
+      </label>
+      <label class="full">Descrição
+        <input id="f-desc" type="text" required placeholder="Ex.: 1ª parcela, material, diária">
+      </label>
+      <label>Data
+        <input id="f-date" type="date" required>
+      </label>
+      <label>Valor (R$)
+        <input id="f-val" type="text" inputmode="decimal" required placeholder="0,00">
+      </label>
+      <label>Situação
+        <select id="f-status">
+          <option value="pago">Pago</option>
+          <option value="apagar">A pagar</option>
+          <option value="cotado">Orçamento (cotado)</option>
+        </select>
+      </label>
+      <label>Forma de pagamento
+        <select id="f-pay">
+          <option value="">—</option>
+          <option>Pix</option><option>Cartão de crédito</option><option>Cartão de débito</option>
+          <option>Boleto</option><option>Transferência</option><option>Dinheiro</option><option>Cheque</option><option>Outro</option>
+        </select>
+      </label>
+      <label class="full">Fornecedor ou responsável
+        <input id="f-who" type="text" placeholder="Ex.: nome do profissional ou da loja">
+      </label>
+      <label class="full">Comprovante (nome do arquivo na pasta)
+        <input id="f-file" type="text" placeholder="Ex.: 2026-11-09 pedreiro pix.pdf">
+      </label>
+      <label class="full">Observação
+        <textarea id="f-note"></textarea>
+      </label>
+    </div>
+    <div class="dlg-foot">
+      <button type="button" class="btn" id="f-cancel">Cancelar</button>
+      <button type="submit" class="btn primary" id="f-save">Salvar</button>
+    </div>
+  </form>
+</dialog>
+<div id="toast" role="status"></div>
+
+<script id="state" type="application/json">{"v":1,"cats":[{"id":"obra","name":"Obra (pedreiro, gesseiro e eletricista)","budget":0,"scope":[{"t":"Parede da sala: serviço e aplicação de textura de cimento queimado","d":false},{"t":"Fiação da TV","d":false},{"t":"Sanca de gesso na sala (em L) e instalação de LED na sanca","d":false},{"t":"Instalar luminária na sala e os suportes, com acionamento pela tomada inteligente","d":false},{"t":"LED de embutir no corredor","d":false},{"t":"Parede da cozinha com reboco e cerâmica","d":false},{"t":"Abertura de porta de 80 cm para acesso à cozinha e relocar a tomada da geladeira","d":false},{"t":"Instalação do triturador da pia","d":false},{"t":"Pintura das áreas de gesso onde houver serviço","d":false}]},{"id":"marceneiro","name":"Marceneiro · Jonas Planejados","budget":11490,"scope":[{"t":"Sala: cristaleira com prateleiras de vidro e porta de vidro","d":false},{"t":"Sala: painel com frente de gavetas em branco laqueado brilho","d":false},{"t":"Sala: ripado de cerca de 60 cm por trás do painel (medida a confirmar)","d":false},{"t":"Sala: móvel com espaço para a adega e a cervejeira","d":false},{"t":"Sala: móvel aéreo com portas de vidro","d":false},{"t":"Sala: LED sob o móvel aéreo, em volta do painel e de cima a baixo na cristaleira","d":false},{"t":"Móvel da área de serviço","d":false},{"t":"Guarda-roupa com prateleira (Jonas citou uma; confirmar se são várias)","d":false},{"t":"Móvel do banheiro da suíte, dentro do valor do móvel da sala","d":false}]},{"id":"mudanca","name":"Gastos da mudança","budget":0},{"id":"cortinas","name":"Compra de cortinas","budget":0},{"id":"diversos","name":"Compras diversas (utensílios e ajustes)","budget":0}],"entries":[{"id":"eorcmao1","cat":"marceneiro","desc":"Móveis da sala: mão de obra","date":"2026-11-09","value":3370,"status":"apagar","pay":"","who":"Jonas Planejados","file":"","note":"Itens do orçamento a detalhar"},{"id":"ecortina1","cat":"cortinas","desc":"2 cortinas Elegance Double Vision + 2 persianas (1,48 x 1,75 m)","date":"2026-11-09","value":1886,"status":"cotado","pay":"","who":"WK Decor (Caruaru)","file":"","note":"Proposta: entrada de R$ 350,00 + 6 parcelas de R$ 256,00"},{"id":"emarc0001","cat":"marceneiro","desc":"Fita de borda laca BR Cristallo (cod. 0018649)","date":"2026-11-11","value":54.6,"status":"pago","pay":"","who":"Madecenter Caruaru","file":"","note":"Comprovante de retirada, Orc./Res. 097213, 14:45"},{"id":"emarc0002","cat":"marceneiro","desc":"Chapa pré-cortada MDF laca Cristallo (cod. 0019440)","date":"2026-11-11","value":617.52,"status":"pago","pay":"","who":"MC Filial Caruaru (Medida Certa)","file":"","note":"Comprovante de retirada, Orc./Res. 048330, 14:46"},{"id":"eobra0001","cat":"obra","desc":"Mão de obra (fechado com o pedreiro)","date":"2026-11-11","value":3500,"status":"apagar","pay":"","who":"","file":"","note":"Cobre os 9 itens do escopo: pedreiro, gesseiro e eletricista"},{"id":"eguard002","cat":"marceneiro","desc":"Guarda-roupas com prateleiras: mão de obra","date":"2026-11-11","value":1700,"status":"apagar","pay":"","who":"Jonas Planejados","file":"","note":"Orçamento do marceneiro"},{"id":"eservi002","cat":"marceneiro","desc":"Móvel da área de serviço: mão de obra","date":"2026-11-11","value":300,"status":"apagar","pay":"","who":"Jonas Planejados","file":"","note":"Orçamento do marceneiro"},{"id":"elisboa001","cat":"marceneiro","desc":"Material de marcenaria: MDF, ferragens, perfis e fitas de borda (NF-e 000.075.265)","date":"2026-11-11","value":5491.84,"status":"pago","pay":"Cartão de crédito","who":"Lisboa Marcenaria e Vidraçaria (Caruaru)","file":"NF-e 000.075.265 Lisboa Marcenaria","note":"Mastercard, parcelado em 10x (cerca de R$ 549,18). NF em nome de Jonas Ramos dos Santos. Abate o material fechado com o Jonas (sala 3.970 + guarda-roupas 1.800 + área de serviço 350 = 6.120), junto com as compras da Madecenter e da Medida Certa."}]}</script>
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
+import { getFirestore, doc, onSnapshot, setDoc } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
+import { firebaseConfig } from "./firebase-config.js";
+(function(){
+  var STATE = JSON.parse(document.getElementById('state').textContent);
+  var cloud = null;
+  var filters = { q:'', status:'' };
+  var pendingDel = null;
+  var editingId = null;
+  var payFor = null;
+  var STATUS = { pago:'Pago', apagar:'A pagar', cotado:'Orçamento' };
+
+  var $ = function(s){ return document.querySelector(s); };
+  var fmt = new Intl.NumberFormat('pt-BR',{style:'currency',currency:'BRL'});
+  var fmtN = new Intl.NumberFormat('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
+  function brl(n){ return fmt.format(n||0); }
+  function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g,function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
+  function parseBRL(s){
+    s = String(s||'').replace(/[^\d,.\-]/g,'');
+    if (s.indexOf(',')>-1) s = s.replace(/\./g,'').replace(',','.');
+    var n = parseFloat(s);
+    return isFinite(n) ? Math.round(n*100)/100 : 0;
+  }
+  function dBR(iso){ if(!iso) return ''; var p=iso.split('-'); return p[2]+'/'+p[1]+'/'+p[0]; }
+  function today(){ var d=new Date(); var m=String(d.getMonth()+1).padStart(2,'0'); var dd=String(d.getDate()).padStart(2,'0'); return d.getFullYear()+'-'+m+'-'+dd; }
+  function uid(){ return 'e'+Date.now().toString(36)+Math.random().toString(36).slice(2,6); }
+  function toast(msg){ var t=$('#toast'); t.textContent=msg; t.classList.add('on'); clearTimeout(toast._t); toast._t=setTimeout(function(){ t.classList.remove('on'); },2800); }
+
+  function totals(catId){
+    var t={pago:0,apagar:0,cotado:0};
+    STATE.entries.forEach(function(e){ if(!catId||e.cat===catId) t[e.status]+=e.value; });
+    return t;
+  }
+  function catName(id){ var c=STATE.cats.filter(function(c){return c.id===id;})[0]; return c?c.name:id; }
+
+  function render(){
+    var all = totals();
+    var budget = STATE.cats.reduce(function(a,c){ return a+c.budget; },0);
+    var spent = all.pago+all.apagar;
+    var saldo = budget-spent;
+    var pct = budget>0 ? Math.round(spent/budget*100) : null;
+
+    var h = '';
+    h += '<header class="head"><div><h1>Acqua Home · Caruaru</h1>'
+      + '<p class="muted">Controle de gastos da obra e da mudança do apartamento na Torre Pacific.</p></div>'
+      + '<div class="save-state'+(cloud===false?' off':'')+'" id="save-state"><i></i><span>'+(cloud===false?'Sem conexão com a nuvem: as alterações não estão sendo salvas':cloud?'Salvo na nuvem. Quem tem o link vê e edita.':'Conectando à nuvem...')+'</span></div></header>';
+
+    h += '<section class="tiles" aria-label="Resumo geral">'
+      + tile('Total fechado', brl(spent), 'pago + falta pagar, só o que já foi contratado','')
+      + tile('Pago', brl(all.pago), spent>0?Math.round(all.pago/spent*100)+'% do total fechado':'','good')
+      + tile('Falta pagar', brl(all.apagar), 'o que ainda deve; cai a cada pagamento','warn')
+      + tile('Em orçamento', brl(all.cotado), 'cotações ainda não fechadas, fora do total','')
+      + '</section>';
+
+    h += '<section class="sec" aria-labelledby="h-res"><h2 id="h-res">Resumo por categoria</h2><div class="panel scroll"><table>'
+      + '<thead><tr><th>Categoria</th><th class="r">Total fechado</th><th class="r">Pago</th><th class="r">Falta pagar</th><th class="r">Em orçamento</th><th>Andamento</th></tr></thead><tbody>';
+    STATE.cats.forEach(function(c){
+      var t=totals(c.id), s=t.pago+t.apagar, sd=t.apagar;
+      var p = s>0 ? Math.round(t.pago/s*100) : 0;
+      var over = false;
+      h += '<tr><td><button class="catlink" data-act="jump" data-cat="'+c.id+'">'+esc(c.name)+'</button></td>'
+        + '<td class="r num">'+brl(s)+'</td>'
+        + '<td class="r num">'+brl(t.pago)+'</td><td class="r num">'+brl(t.apagar)+'</td><td class="r num muted">'+brl(t.cotado)+'</td>'
+        + ''
+        + '<td><div class="bar'+(over?' over':'')+'" role="img" aria-label="'+(p+'% pago')+'"><b style="width:'+p+'%"></b></div>'
+        + '<span class="pct">'+(s>0?p+'% pago':'sem lançamentos')+'</span></td></tr>';
+    });
+    h += '</tbody><tfoot><tr><td>Total</td><td class="r num">'+brl(spent)+'</td><td class="r num">'+brl(all.pago)+'</td><td class="r num">'+brl(all.apagar)+'</td><td class="r num">'+brl(all.cotado)+'</td><td></td></tr></tfoot></table></div></section>';
+
+    h += '<section class="tools" aria-label="Filtros"><input id="q" type="search" placeholder="Buscar por descrição, fornecedor ou observação" value="'+esc(filters.q)+'" aria-label="Buscar lançamentos">'
+      + '<select id="fs" aria-label="Filtrar por situação"><option value="">Todas as situações</option>'
+      + ['pago','apagar','cotado'].map(function(k){ return '<option value="'+k+'"'+(filters.status===k?' selected':'')+'>'+STATUS[k]+'</option>'; }).join('')
+      + '</select><button class="btn primary" data-act="add" data-cat="">+ Lançar gasto</button></section>';
+
+    STATE.cats.forEach(function(c){ h += section(c); });
+
+    h += '<footer class="foot">Comprovantes, notas e contratos ficam na pasta <code>ICLOUD DRIVE / 06 - RESIDENCIAL / 08 - ACQUA HOME - OBRA-CARUARU-MUDANCA</code>. Em cada lançamento, anote o nome do arquivo para achar o documento depois.<br>'
+      + 'Total fechado é Pago mais A pagar. “Falta pagar” cai quando você usa Registrar pagamento ou marca o lançamento como Pago. “Orçamento” registra cotações ainda não fechadas e não entra na conta. <a href="index.html">Voltar ao menu</a></footer>';
+
+    $('#app').innerHTML = h;
+  }
+
+  function tile(label,value,sub,cls){
+    return '<div class="tile '+cls+'"><span class="label">'+label+'</span><span class="value">'+value+'</span><span class="sub">'+esc(sub||' ')+'</span></div>';
+  }
+
+  function scopeHtml(c){
+    if(!c.scope) return '';
+    var done=c.scope.filter(function(s){ return s.d; }).length;
+    var h='<div class="panel scope"><div class="scope-h"><b>Escopo do orçamento</b><span class="muted">'+done+' de '+c.scope.length+' concluídos</span></div><ul>';
+    c.scope.forEach(function(s,i){
+      h+='<li><label class="chk"><input type="checkbox" data-act="scope" data-cat="'+c.id+'" data-i="'+i+'"'+(s.d?' checked':'')+'><span'+(s.d?' class="done"':'')+'>'+esc(s.t)+'</span></label><button class="btn sm danger" data-act="scope-del" data-cat="'+c.id+'" data-i="'+i+'">Remover</button></li>';
+    });
+    h+='</ul><form class="scope-add" data-cat="'+c.id+'"><input id="sa-'+c.id+'" type="text" placeholder="Adicionar item ao escopo" aria-label="Novo item do escopo"><button type="submit" class="btn sm">Adicionar</button></form></div>';
+    return h;
+  }
+
+  function section(c){
+    var t=totals(c.id);
+    var q=filters.q.trim().toLowerCase();
+    var rows = STATE.entries.filter(function(e){
+      if(e.cat!==c.id) return false;
+      if(filters.status && e.status!==filters.status) return false;
+      if(q && (e.desc+' '+e.who+' '+e.note+' '+e.file).toLowerCase().indexOf(q)<0) return false;
+      return true;
+    }).sort(function(a,b){ return a.date<b.date?-1:a.date>b.date?1:0; });
+    var h='<section class="sec" id="sec-'+c.id+'" aria-labelledby="h-'+c.id+'"><div class="sec-head"><div><h2 id="h-'+c.id+'">'+esc(c.name)+'</h2>'
+      + '<div class="meta"><span>Pago <b class="num">'+brl(t.pago)+'</b></span><span>A pagar <b class="num">'+brl(t.apagar)+'</b></span><span>Cotado <b class="num">'+brl(t.cotado)+'</b></span></div></div>'
+      + '<button class="btn" data-act="add" data-cat="'+c.id+'">+ Lançar em '+esc(c.name.split(' ·')[0].split(' (')[0])+'</button></div>'
+      + scopeHtml(c) + '<div class="panel scroll">';
+    if(!rows.length){
+      var any = STATE.entries.some(function(e){ return e.cat===c.id; });
+      h += '<div class="empty">'+(any?'Nenhum lançamento com esses filtros.':'Nenhum lançamento ainda.')+'</div>';
+    } else {
+      h += '<table><thead><tr><th>Data</th><th>Descrição</th><th>Fornecedor</th><th>Pagamento</th><th>Situação</th><th class="r">Valor</th><th></th></tr></thead><tbody>';
+      rows.forEach(function(e){
+        var confirming = pendingDel===e.id;
+        h += '<tr><td class="num">'+dBR(e.date)+'</td>'
+          + '<td>'+esc(e.desc)+(e.note?'<span class="note">'+esc(e.note)+'</span>':'')+(e.file?'<span class="file">'+esc(e.file)+'</span>':'')+'</td>'
+          + '<td>'+esc(e.who)+'</td><td>'+esc(e.pay)+'</td>'
+          + '<td><span class="pill '+e.status+'">'+STATUS[e.status]+'</span></td>'
+          + '<td class="r num">'+brl(e.value)+'</td>'
+          + '<td><div class="acts">'+(e.status==='apagar'?'<button class="btn sm" data-act="pay" data-id="'+e.id+'">Registrar pagamento</button>':'')+'<button class="btn sm" data-act="edit" data-id="'+e.id+'">Editar</button>'
+          + '<button class="btn sm danger" data-act="del" data-id="'+e.id+'">'+(confirming?'Confirmar exclusão':'Excluir')+'</button></div></td></tr>';
+      });
+      h += '</tbody></table>';
+    }
+    return h+'</div></section>';
+  }
+
+  /* ---------- salvar na nuvem (Firebase Firestore) ---------- */
+  var timer=null, ref=null;
+  function setCloud(v){
+    cloud=v; var el=$('#save-state'); if(!el) return;
+    el.classList.toggle('off',v===false);
+    el.lastChild.textContent = v===false ? 'Sem conexão com a nuvem: as alterações não estão sendo salvas' : v ? 'Salvo na nuvem. Quem tem o link vê e edita.' : 'Conectando à nuvem...';
+  }
+  function save(){
+    if(!ref){ setCloud(false); return; }
+    setDoc(ref,{ticks:{json:JSON.stringify(STATE)},t:Date.now()}).then(function(){ setCloud(true); }).catch(function(){ setCloud(false); toast('Não foi possível salvar na nuvem.'); });
+  }
+  function commit(){
+    render();
+    clearTimeout(timer);
+    timer=setTimeout(save,300);
+  }
+
+  /* ---------- formulário ---------- */
+  var dlg=$('#dlg');
+  function openForm(catId,id){
+    editingId=id||null; payFor=null;
+    var e = id ? STATE.entries.filter(function(x){return x.id===id;})[0] : null;
+    $('#dlg-title').textContent = e?'Editar lançamento':'Lançar gasto';
+    $('#f-cat').innerHTML = STATE.cats.map(function(c){ return '<option value="'+c.id+'">'+esc(c.name)+'</option>'; }).join('');
+    $('#f-cat').value = e?e.cat:(catId||STATE.cats[0].id);
+    $('#f-desc').value = e?e.desc:'';
+    $('#f-date').value = e?e.date:today();
+    $('#f-val').value = e?fmtN.format(e.value):'';
+    $('#f-status').value = e?e.status:'pago';
+    $('#f-pay').value = e?e.pay:'';
+    $('#f-who').value = e?e.who:'';
+    $('#f-file').value = e?e.file:'';
+    $('#f-note').value = e?e.note:'';
+    if(dlg.showModal) dlg.showModal(); else dlg.setAttribute('open','');
+    $('#f-desc').focus();
+  }
+  function openPay(id){
+    var e=STATE.entries.filter(function(x){return x.id===id;})[0]; if(!e) return;
+    openForm(e.cat);
+    payFor=e.id;
+    $('#dlg-title').textContent='Registrar pagamento';
+    $('#f-desc').value='Pagamento: '+e.desc;
+    $('#f-val').value=fmtN.format(e.value);
+    $('#f-status').value='pago';
+    $('#f-who').value=e.who;
+    $('#f-note').value='Abate do valor a pagar. Altere o valor se o pagamento for parcial.';
+  }
+  function closeForm(){ if(dlg.close) dlg.close(); else dlg.removeAttribute('open'); }
+  $('#f-cancel').addEventListener('click',closeForm);
+  $('#form').addEventListener('submit',function(ev){
+    ev.preventDefault();
+    var v=parseBRL($('#f-val').value);
+    var rec={
+      cat:$('#f-cat').value, desc:$('#f-desc').value.trim(), date:$('#f-date').value, value:v,
+      status:$('#f-status').value, pay:$('#f-pay').value, who:$('#f-who').value.trim(),
+      file:$('#f-file').value.trim(), note:$('#f-note').value.trim()
+    };
+    if(!rec.desc || !rec.date){ return; }
+    if(payFor){
+      var src=STATE.entries.filter(function(x){return x.id===payFor;})[0];
+      if(src){ var left=Math.round((src.value-rec.value)*100)/100; if(left>0.004){ src.value=left; } else { STATE.entries=STATE.entries.filter(function(x){return x.id!==payFor;}); } }
+      payFor=null;
+    }
+    if(editingId){
+      STATE.entries = STATE.entries.map(function(x){ return x.id===editingId ? Object.assign({id:x.id},rec) : x; });
+    } else {
+      rec.id=uid(); STATE.entries.push(rec);
+    }
+    closeForm(); commit();
+  });
+
+  /* ---------- eventos ---------- */
+  var app=$('#app');
+  app.addEventListener('click',function(ev){
+    var b=ev.target.closest('[data-act]'); if(!b) return;
+    var act=b.getAttribute('data-act');
+    if(act==='add'){ openForm(b.getAttribute('data-cat')); }
+    else if(act==='edit'){ openForm(null,b.getAttribute('data-id')); }
+    else if(act==='pay'){ openPay(b.getAttribute('data-id')); }
+    else if(act==='scope-del'){ var cc=STATE.cats.filter(function(c){return c.id===b.getAttribute('data-cat');})[0]; cc.scope.splice(+b.getAttribute('data-i'),1); commit(); }
+    else if(act==='jump'){ var s=document.getElementById('sec-'+b.getAttribute('data-cat')); if(s) s.scrollIntoView({behavior:'smooth',block:'start'}); }
+    else if(act==='del'){
+      var id=b.getAttribute('data-id');
+      if(pendingDel===id){ pendingDel=null; STATE.entries=STATE.entries.filter(function(x){return x.id!==id;}); commit(); }
+      else { pendingDel=id; render(); }
+    }
+  });
+  app.addEventListener('change',function(ev){
+    var t=ev.target;
+    if(t.getAttribute && t.getAttribute('data-act')==='scope'){
+      var sc=STATE.cats.filter(function(c){return c.id===t.getAttribute('data-cat');})[0];
+      sc.scope[+t.getAttribute('data-i')].d=t.checked; commit();
+    } else if(t.getAttribute && t.getAttribute('data-act')==='budget'){
+      var c=STATE.cats.filter(function(c){return c.id===t.getAttribute('data-cat');})[0];
+      c.budget=Math.max(0,parseBRL(t.value)); commit();
+    } else if(t.id==='fs'){ filters.status=t.value; render(); }
+  });
+  app.addEventListener('input',function(ev){
+    if(ev.target.id==='q'){
+      filters.q=ev.target.value; var pos=ev.target.selectionStart; render();
+      var q=$('#q'); q.focus(); try{ q.setSelectionRange(pos,pos); }catch(e){}
+    }
+  });
+
+  render();
+  app.addEventListener('submit',function(ev){
+    var f=ev.target; if(!f.classList || !f.classList.contains('scope-add')) return;
+    ev.preventDefault();
+    var t=f.querySelector('input').value.trim(); if(!t) return;
+    var c=STATE.cats.filter(function(c){return c.id===f.getAttribute('data-cat');})[0];
+    c.scope.push({t:t,d:false}); commit();
+  });
+  try{
+    var fbapp=initializeApp(firebaseConfig);
+    ref=doc(getFirestore(fbapp),'checklists','gastos-acqua-home');
+    onSnapshot(ref,function(snap){
+      if(snap.metadata.hasPendingWrites) return;
+      var d=snap.exists()?snap.data():null;
+      var js=d&&d.ticks&&d.ticks.json;
+      if(js){
+        try{ var remote=JSON.parse(js); if(remote&&remote.cats&&remote.entries&&!dlg.open){ STATE=remote; render(); } setCloud(true); }catch(e){ setCloud(false); }
+      } else { save(); }
+    },function(){ setCloud(false); });
+  }catch(e){ setCloud(false); }
+})();
+</script>
+</body>
+</html>
